@@ -1,0 +1,37 @@
+From c02a0d634ac654822bc7a4bce8f738f78809106e Mon Sep 17 00:00:00 2001
+From: Nitzan Lavi <nizan.lavi@gmail.com>
+Date: Thu, 10 Feb 2022 21:11:45 +0200
+Subject: [PATCH] Program fpga on boot
+
+---
+ include/config_distro_bootcmd.h | 14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
+
+diff --git a/include/config_distro_bootcmd.h b/include/config_distro_bootcmd.h
+index 2f90929178..f53b5fe03c 100644
+--- a/include/config_distro_bootcmd.h
++++ b/include/config_distro_bootcmd.h
+@@ -490,7 +490,19 @@
+ 	\
+ 	BOOT_TARGET_DEVICES(BOOTENV_DEV)                                  \
+ 	\
+-	"distro_bootcmd=" BOOTENV_SET_SCSI_NEED_INIT                      \
++	"distro_bootcmd="							\
++		"if test -e mmc 0:1 u-boot.scr; then "				\
++			"echo --- Found u-boot.scr ---; "			\
++			"fatload mmc 0:1 0x2000000 u-boot.scr; "		\
++			"source 0x2000000; "					\
++		"elif test -e mmc 0:1 soc_system.rbf; then "			\
++			"echo --- Programming FPGA ---; "			\
++			"fatload mmc 0:1 0x2000000 soc_system.rbf; "		\
++			"fpga load 0 0x2000000 0x700000; "			\
++		"else "								\
++			"echo u-boot.scr and soc_system.rbf not found in fat.; " \
++		"fi; "								\
++                BOOTENV_SET_SCSI_NEED_INIT                                \
+ 		BOOTENV_SET_NVME_NEED_INIT                                \
+ 		BOOTENV_SET_IDE_NEED_INIT                                 \
+ 		BOOTENV_SET_VIRTIO_NEED_INIT                              \
+-- 
+2.34.1
+
